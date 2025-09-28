@@ -11,15 +11,20 @@
     ];
 
   # Bootloader.
-  boot.loader.systemd-boot.enable = true;
+  # boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.grub.enable = true;
+  boot.loader.grub.device = "nodev";
+  boot.loader.grub.useOSProber = true;
+  boot.loader.grub.efiSupport = true;
+  boot.loader.grub.default = "saved";
 
   # Use latest kernel.
   #boot.kernelPackages = pkgs.linuxPackages_latest;
   # Use 6.12 because that's the LTS kernel that matches nvidia 575 Beta drivers
   boot.kernelPackages = pkgs.linuxPackages_6_12;
 
-  networking.hostName = "nixos"; # Define your hostname.
+  networking.hostName = "sengming"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
@@ -32,6 +37,8 @@
 
   # Set your time zone.
   time.timeZone = "America/New_York";
+  # Because we're dual-booting and Windows stores the time as local, cos it's dumb
+  time.hardwareClockInLocalTime = true;
 
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
@@ -105,14 +112,18 @@
   environment.systemPackages = with pkgs; [
      neovim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
      wget
+     gh
      lf
      pciutils
+     coreutils
      tree
      git
      jujutsu
      lazyjj
      fish
+     gcc
      rustup
+     alsa-lib
      cargo
      python314
      tmux
@@ -121,6 +132,10 @@
      vulkan-tools
      pkg-config
      gtk3
+     alacritty
+     rust-analyzer
+     ollama-cuda
+     goose-cli
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
