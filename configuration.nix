@@ -58,9 +58,12 @@
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 
-  # Enable the Budgie Desktop environment.
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.budgie.enable = true;
+  # 1. Enable the COSMIC Desktop Environment
+  services.desktopManager.cosmic.enable = true;
+  services.displayManager.cosmic-greeter.enable = true;
+
+  # 2. Optional: Enable Flatpak for the COSMIC Store
+  services.flatpak.enable = true;
 
   # Configure keymap in X11
   services.xserver.xkb = {
