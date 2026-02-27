@@ -122,6 +122,7 @@
      lazyjj
      fish
      gcc
+     ripgrep
      rustup
      alsa-lib
      cargo
