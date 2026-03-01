@@ -19,6 +19,9 @@
   boot.loader.grub.efiSupport = true;
   boot.loader.grub.default = "saved";
 
+  # System 76 scheduler works well with COSMIC
+  services.system76-scheduler.enable = true;
+  
   # Use latest kernel.
   #boot.kernelPackages = pkgs.linuxPackages_latest;
   # Use 6.12 because that's the LTS kernel that matches nvidia 575 Beta drivers
@@ -140,7 +143,13 @@
      rust-analyzer
      ollama-cuda
      goose-cli
+     inputs.whisper-dictation.packages.${pkgs.system}.default
   ];
+
+  systemd.user.services.whisper-dictation = {
+    enable = true;
+    wantedBy = [ "graphical-session.target" ];
+  };
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -187,7 +196,7 @@
     # Enable this if you have graphical corruption issues or application crashes after waking
     # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead 
     # of just the bare essentials.
-    powerManagement.enable = false;
+    powerManagement.enable = true;
 
     # Fine-grained power management. Turns off GPU when not in use.
     # Experimental and only works on modern Nvidia GPUs (Turing or newer).
