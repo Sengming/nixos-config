@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, libs, ... }:
+{ config, pkgs, libs, inputs, ... }:
 
 {
   imports =
@@ -88,7 +88,7 @@
     # If you want to use JACK applications, uncomment this
     #jack.enable = true;
 
-    # use the example session manager (no others are packaged yet so this is enabled by default,
+     # use the example session manager (no others are packaged yet so this is enabled by default,
     # no need to redefine it in your config for now)
     #media-session.enable = true;
   };
@@ -143,13 +143,10 @@
      rust-analyzer
      ollama-cuda
      goose-cli
-     inputs.whisper-dictation.packages.${pkgs.system}.default
+     devenv
+     codex
+     wtype
   ];
-
-  systemd.user.services.whisper-dictation = {
-    enable = true;
-    wantedBy = [ "graphical-session.target" ];
-  };
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
