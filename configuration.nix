@@ -148,6 +148,11 @@
      wtype
   ];
 
+  # System fonts
+  fonts.packages = with pkgs; [
+    nerd-fonts.meslo-lg
+  ];
+
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
@@ -166,6 +171,14 @@
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
+
+
+  # Home Manager (system-managed)
+  home-manager = {
+    useGlobalPkgs = true;
+    useUserPackages = true;
+    users.sengming = import ./home.nix;
+  };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
@@ -212,4 +225,12 @@
     nvidiaSettings = true;
     package = config.boot.kernelPackages.nvidiaPackages.beta;
   };
+  security.sudo.extraRules = [
+  {
+     users = [ "sengming" ];
+     commands = [
+        { command = "ALL"; options = [ "NOPASSWD" ]; }
+     ];
+  }
+  ];
 }

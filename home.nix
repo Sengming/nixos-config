@@ -54,6 +54,13 @@
 [terminal.shell]
 program = "fish" # Or the correct path to your fish executable
 args = ["-l"] # -l ensures a login shell is started, loading fish configurations
+
+[font]
+normal = { family = "MesloLGS Nerd Font Mono", style = "Regular" }
+bold = { family = "MesloLGS Nerd Font Mono", style = "Bold" }
+italic = { family = "MesloLGS Nerd Font Mono", style = "Italic" }
+bold_italic = { family = "MesloLGS Nerd Font Mono", style = "Bold Italic" }
+size = 12.0
      '';
    };
   };
@@ -77,6 +84,156 @@ args = ["-l"] # -l ensures a login shell is started, loading fish configurations
   home.sessionVariables = {
     # EDITOR = "emacs";
   };
+
+  programs.neovim = {
+    enable = true;
+    viAlias = true;
+    vimAlias = true;
+    withNodeJs = true;
+    withPython3 = true;
+  };
+
+  xdg.configFile."nvim/init.lua".text = ''
+    vim.g.mapleader = "\\"
+    vim.g.maplocalleader = "\\"
+
+    vim.opt.number = true
+    vim.opt.relativenumber = false
+    vim.opt.cursorline = true
+    vim.opt.signcolumn = "yes"
+    vim.opt.mouse = "a"
+    vim.opt.clipboard = "unnamedplus"
+    vim.opt.expandtab = true
+    vim.opt.shiftwidth = 2
+    vim.opt.tabstop = 2
+    vim.opt.softtabstop = 2
+    vim.opt.ignorecase = true
+    vim.opt.smartcase = true
+    vim.opt.updatetime = 250
+    vim.opt.timeoutlen = 500
+    vim.opt.splitright = true
+    vim.opt.splitbelow = true
+    vim.opt.termguicolors = true
+    vim.opt.completeopt = "menu,menuone,noselect"
+
+    vim.api.nvim_create_autocmd("TextYankPost", {
+      callback = function()
+        vim.highlight.on_yank()
+      end,
+    })
+
+    local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+    if not vim.loop.fs_stat(lazypath) then
+      vim.fn.system({
+        "git",
+        "clone",
+        "--filter=blob:none",
+        "https://github.com/folke/lazy.nvim.git",
+        "--branch=stable",
+        lazypath,
+      })
+    end
+    vim.opt.rtp:prepend(lazypath)
+
+    require("lazy").setup({
+      { "nvim-tree/nvim-tree.lua", lazy = false, dependencies = { "nvim-tree/nvim-web-devicons" }, config = function()
+          require("nvim-tree").setup({
+            hijack_netrw = true,
+            disable_netrw = true,
+            view = { width = 30 },
+            renderer = {
+              icons = { show = { git = true, folder = true, file = true, folder_arrow = true } },
+            },
+          })
+        end
+      },
+      { "nvim-telescope/telescope.nvim",
+        dependencies = { "nvim-lua/plenary.nvim" },
+        keys = {
+          { "<leader>rg", function() require("telescope.builtin").live_grep() end },
+          { "<leader>ff", function() require("telescope.builtin").find_files() end },
+        },
+      },
+      { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate", config = function()
+          local ok, configs = pcall(require, "nvim-treesitter.configs")
+          if not ok then
+            return
+          end
+          configs.setup({
+            highlight = { enable = true },
+            indent = { enable = true },
+          })
+        end
+      },
+      { "neovim/nvim-lspconfig" },
+      { "hrsh7th/nvim-cmp",
+        dependencies = {
+          "hrsh7th/cmp-nvim-lsp",
+          "L3MON4D3/LuaSnip",
+          "saadparwaiz1/cmp_luasnip",
+          "rafamadriz/friendly-snippets",
+        },
+        config = function()
+          local cmp = require("cmp")
+          local luasnip = require("luasnip")
+          require("luasnip.loaders.from_vscode").lazy_load()
+
+          cmp.setup({
+            snippet = {
+              expand = function(args)
+                luasnip.lsp_expand(args.body)
+              end,
+            },
+            mapping = cmp.mapping.preset.insert({
+              ["<C-Space>"] = cmp.mapping.complete(),
+              ["<CR>"] = cmp.mapping.confirm({ select = true }),
+            }),
+            sources = cmp.config.sources({
+              { name = "nvim_lsp" },
+              { name = "luasnip" },
+            }, {
+              { name = "buffer" },
+            }),
+          })
+        end
+      },
+      { "mrcjkb/rustaceanvim", version = "^4", ft = { "rust" } },
+      { "tpope/vim-fugitive" },
+      { "lewis6991/gitsigns.nvim", config = function()
+          require("gitsigns").setup()
+        end
+      },
+    })
+
+    vim.keymap.set("n", "<leader>e", ":NvimTreeToggle<CR>", { silent = true })
+    vim.keymap.set("n", "<leader>n", ":NvimTreeFindFile<CR>", { silent = true })
+
+    vim.api.nvim_create_autocmd("VimEnter", {
+      callback = function()
+        vim.cmd("NvimTreeOpen")
+        if vim.fn.argc() > 0 then
+          vim.cmd("wincmd p")
+        end
+      end,
+    })
+
+
+    local function lsp_keymaps(bufnr)
+      local opts = { buffer = bufnr }
+      vim.keymap.set("n", "<leader>gd", vim.lsp.buf.definition, opts)
+      vim.keymap.set("n", "<leader>f", vim.lsp.buf.references, opts)
+      vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
+      vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
+      vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+    end
+
+    vim.api.nvim_create_autocmd("LspAttach", {
+      callback = function(args)
+        lsp_keymaps(args.buf)
+      end,
+    })
+'';
+
   programs.tmux = {
     enable = true;
     shell = "/run/current-system/sw/bin/fish";
