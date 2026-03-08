@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, libs, ... }:
+{ config, pkgs, libs, inputs, ... }:
 
 {
   imports =
@@ -19,6 +19,9 @@
   boot.loader.grub.efiSupport = true;
   boot.loader.grub.default = "saved";
 
+  # System 76 scheduler works well with COSMIC
+  services.system76-scheduler.enable = true;
+  
   # Use latest kernel.
   #boot.kernelPackages = pkgs.linuxPackages_latest;
   # Use 6.12 because that's the LTS kernel that matches nvidia 575 Beta drivers
@@ -58,9 +61,12 @@
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 
-  # Enable the Budgie Desktop environment.
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.budgie.enable = true;
+  # 1. Enable the COSMIC Desktop Environment
+  services.desktopManager.cosmic.enable = true;
+  services.displayManager.cosmic-greeter.enable = true;
+
+  # 2. Optional: Enable Flatpak for the COSMIC Store
+  services.flatpak.enable = true;
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -82,7 +88,7 @@
     # If you want to use JACK applications, uncomment this
     #jack.enable = true;
 
-    # use the example session manager (no others are packaged yet so this is enabled by default,
+     # use the example session manager (no others are packaged yet so this is enabled by default,
     # no need to redefine it in your config for now)
     #media-session.enable = true;
   };
@@ -122,6 +128,7 @@
      lazyjj
      fish
      gcc
+     ripgrep
      rustup
      alsa-lib
      cargo
@@ -136,6 +143,14 @@
      rust-analyzer
      ollama-cuda
      goose-cli
+     devenv
+     codex
+     wtype
+  ];
+
+  # System fonts
+  fonts.packages = with pkgs; [
+    nerd-fonts.meslo-lg
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -156,6 +171,14 @@
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
+
+
+  # Home Manager (system-managed)
+  home-manager = {
+    useGlobalPkgs = true;
+    useUserPackages = true;
+    users.sengming = import ./home.nix;
+  };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
@@ -183,7 +206,7 @@
     # Enable this if you have graphical corruption issues or application crashes after waking
     # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead 
     # of just the bare essentials.
-    powerManagement.enable = false;
+    powerManagement.enable = true;
 
     # Fine-grained power management. Turns off GPU when not in use.
     # Experimental and only works on modern Nvidia GPUs (Turing or newer).
@@ -202,4 +225,12 @@
     nvidiaSettings = true;
     package = config.boot.kernelPackages.nvidiaPackages.beta;
   };
+  security.sudo.extraRules = [
+  {
+     users = [ "sengming" ];
+     commands = [
+        { command = "ALL"; options = [ "NOPASSWD" ]; }
+     ];
+  }
+  ];
 }
